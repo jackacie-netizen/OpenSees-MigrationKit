@@ -28,6 +28,8 @@ def build_parser() -> argparse.ArgumentParser:
 def _validate(args: argparse.Namespace) -> int:
     try:
         manifest = load_manifest(args.manifest)
+        if manifest.validation_state != ValidationState.NOT_RUN.value:
+            raise ManifestError("automated validation must start at NOT_RUN")
         record = transition_automated(ValidationRecord(), ValidationState.RUNNING)
         result = validate_manifest(manifest)
         if result.passed:

@@ -26,6 +26,14 @@ def test_validate_failure_returns_one(tmp_path, manifest_data, capsys):
     assert "FAIL state=FAILED" in capsys.readouterr().out
 
 
+def test_validate_rejects_manifest_not_in_not_run_state(tmp_path, manifest_data, capsys):
+    manifest_data["validation_state"] = "ENGINEER_REVIEW"
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest_data), encoding="utf-8")
+    assert main(["validate", str(path)]) == 1
+    assert "must start at NOT_RUN" in capsys.readouterr().err
+
+
 def test_validate_writes_requested_reports(tmp_path, manifest_path):
     json_path = tmp_path / "report.json"
     csv_path = tmp_path / "report.csv"
