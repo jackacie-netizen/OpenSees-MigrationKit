@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "OpenSees-MigrationKit"
+version: 0.1.0
+date-released: 2026-09-25
+type: software
+authors:
+  - family-names: Chen
+    given-names: Jackie
+license: BSD-3-Clause
+abstract: "A manifest-driven toolkit for comparing declared OpenSees Tcl and OpenSeesPy model topology and numerical data."
