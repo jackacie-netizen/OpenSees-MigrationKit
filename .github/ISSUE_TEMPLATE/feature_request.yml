@@ -1,0 +1,26 @@
+name: Feature request
+description: Propose a focused public capability
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Explain the validation need and who it affects.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Proposed behavior
+      description: Describe observable inputs and outputs.
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Publication and engineering considerations
+      description: Identify provenance, tolerance, or human-review implications.
+    validations:
+      required: true
