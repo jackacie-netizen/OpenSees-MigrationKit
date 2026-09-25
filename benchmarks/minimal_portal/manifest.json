@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "project": "minimal-elastic-2d-portal",
+  "tcl_source": "model.tcl",
+  "python_target": "model.py",
+  "units": {
+    "force": "N",
+    "length": "m"
+  },
+  "tolerances": {
+    "absolute": 1e-09,
+    "relative": 1e-06
+  },
+  "reference": {
+    "nodes": {
+      "1": [0.0, 0.0],
+      "2": [4.0, 0.0],
+      "3": [0.0, 3.0],
+      "4": [4.0, 3.0]
+    },
+    "elements": {
+      "1": {"connectivity": [1, 3]},
+      "2": {"connectivity": [2, 4]},
+      "3": {"connectivity": [3, 4]}
+    },
+    "numerical_values": {
+      "bay_width": 4.0,
+      "storey_height": 3.0
+    }
+  },
+  "candidate": {
+    "nodes": {
+      "1": [0.0, 0.0],
+      "2": [4.0, 0.0],
+      "3": [0.0, 3.0],
+      "4": [4.0, 3.0]
+    },
+    "elements": {
+      "1": {"connectivity": [1, 3]},
+      "2": {"connectivity": [2, 4]},
+      "3": {"connectivity": [3, 4]}
+    },
+    "numerical_values": {
+      "bay_width": 4.0,
+      "storey_height": 3.0
+    }
+  },
+  "validation_state": "NOT_RUN"
+}
