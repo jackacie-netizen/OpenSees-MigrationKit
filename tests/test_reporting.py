@@ -12,7 +12,11 @@ def test_build_report_has_stable_public_shape(manifest_path):
     result = validate_manifest(manifest)
     record = ValidationRecord(state=ValidationState.ENGINEER_REVIEW)
     report = build_report(manifest, result, record)
-    assert list(report) == ["schema_version", "project", "passed", "validation_state", "summary", "differences"]
+    assert list(report) == [
+        "schema_version", "project", "passed", "validation_state", "summary", "differences",
+        "provenance", "units", "tolerances", "comparison_scope", "validation_history",
+    ]
+    assert report["schema_version"] == "1.1"
     assert report["validation_state"] == "ENGINEER_REVIEW"
 
 

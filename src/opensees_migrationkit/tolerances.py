@@ -8,8 +8,10 @@ from .manifest import ToleranceConfig
 
 
 def numbers_close(reference: float, candidate: float, tolerance: ToleranceConfig) -> bool:
-    """Return whether two finite values satisfy the configured tolerances."""
+    """Apply symmetric_max: abs(delta) <= max(atol, rtol * max(abs(a), abs(b)))."""
 
+    if tolerance.policy != "symmetric_max":
+        raise ValueError("unsupported tolerance policy; expected symmetric_max")
     values = (float(reference), float(candidate), tolerance.absolute, tolerance.relative)
     if not all(math.isfinite(value) for value in values):
         raise ValueError("comparison values and tolerances must be finite")

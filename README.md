@@ -1,8 +1,8 @@
 # OpenSees-MigrationKit
 
-> A research-grade open-source toolkit for migrating and validating OpenSees Tcl models against OpenSeesPy implementations.
+> Deterministic manifest validation for structural model topology and numerical data.
 
-OpenSees-MigrationKit v0.1.0 provides a deterministic, manifest-driven validation core for comparing structural model topology and numerical data. Direct Tcl/OpenSeesPy execution and response-level equivalence testing are planned extensions.
+OpenSees-MigrationKit v0.1.1 provides a deterministic, manifest-driven validation core for comparing structural model topology and numerical data. Direct Tcl/OpenSeesPy execution and response-level equivalence testing are planned extensions.
 
 **Status:** Early-stage public research tooling; APIs and validation coverage are still evolving.
 
@@ -19,6 +19,7 @@ OpenSees-MigrationKit is an independent project and is not affiliated with or en
 | Element ID and connectivity comparison | Implemented |
 | Explicit absolute and relative numerical tolerances | Implemented |
 | Structured differences and deterministic JSON/CSV reports | Implemented |
+| Manifest input fingerprint, comparison scope and JSON lifecycle history | Implemented |
 | Regression tests and a synthetic portal benchmark | Implemented |
 | Validation lifecycle with a human approval boundary | Implemented |
 | CLI validation of manifest-provided data | Implemented |
@@ -28,7 +29,7 @@ OpenSees-MigrationKit is an independent project and is not affiliated with or en
 | Force-equilibrium and recorder-response validation | Planned |
 | Eigenvalue, period, and nonlinear-response comparison | Planned |
 
-Version 0.1.0 is the foundational validation layer for a larger migration workflow. It is not a complete automatic migration engine and does not establish engineering correctness.
+Version 0.1.1 is the foundational validation layer for a larger migration workflow. It is not a complete automatic migration engine and does not establish engineering correctness.
 
 ## Installation
 
@@ -67,9 +68,19 @@ The manifest declares reference and candidate nodes, elements, numerical values,
 
 Comparison failures produce structured records identifying the category, model identifier, field, reference value, candidate value, and explanatory message. Configured tolerances are applied literally and are never relaxed automatically.
 
+Manifest schema `1.0` rejects duplicate JSON keys, unknown fields and element references to undeclared nodes. Only documented topology fields and named numerical values are compared. The optional tolerance policy is `symmetric_max`, preserving the original rule:
+
+```text
+abs(candidate - reference) <= max(absolute, relative * max(abs(reference), abs(candidate)))
+```
+
+This rule differs from reference-based additive tolerances. No unit conversion or dimensional validation is performed. Select units and tolerances before examining results; a project QA threshold is not a universal engineering acceptance limit.
+
+JSON report schema `1.1` includes the SHA-256 of the exact manifest bytes loaded, units, tolerances, source labels, comparison scope and lifecycle history. The source labels do not prove that model files were inspected or executed. CSV remains a difference table; retain the JSON report and original manifest for audit evidence. See the [manifest and report contract](docs/manifest_and_reports.md).
+
 ## Benchmark
 
-[`benchmarks/minimal_portal`](benchmarks/minimal_portal) is a publication-safe one-bay, one-storey elastic 2D portal frame created specifically for this project. Its Tcl and Python files are readable examples; v0.1.0 validates only their explicitly declared manifest data and does not execute either model.
+[`benchmarks/minimal_portal`](benchmarks/minimal_portal) is a publication-safe one-bay, one-storey elastic 2D portal frame created specifically for this project. Its Tcl and Python files are readable examples; v0.1.1 validates only their explicitly declared manifest data and does not execute either model.
 
 ## Validation philosophy and human review
 
@@ -84,9 +95,13 @@ Automated software and AI agents cannot assign `APPROVED`. The separately expose
 
 See [validation philosophy](docs/validation_philosophy.md), [migration workflow](docs/migration_workflow.md), and [engineering review](docs/engineering_review.md).
 
+Migration fidelity, physical modeling decisions, automated numerical checks and human approval are separate findings. Reproducing an inherited model concern faithfully does not by itself establish a translation error. Regression observations are evidence, never calibration targets. Failed automated checks remain visible even when a human makes a scoped engineering disposition.
+
 ## Roadmap
 
 Planned work includes adapters for Tcl and OpenSeesPy data extraction, controlled dual-run orchestration, recorder and response comparison, equilibrium checks, modal comparisons, and broader benchmark coverage. Each capability will be documented as implemented only after deterministic tests and public examples exist.
+
+Future response adapters must record committed-state coverage, incomplete runs, matched physical quantities, units and local/global component mappings. These are design requirements, not capabilities implemented in v0.1.1; see [future adapter requirements](docs/future_adapters.md).
 
 ## Contributing
 

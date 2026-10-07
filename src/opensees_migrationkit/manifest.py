@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from dataclasses import dataclass
@@ -18,6 +19,7 @@ class ManifestError(ValueError):
 class ToleranceConfig:
     absolute: float
     relative: float
+    policy: str = "symmetric_max"
 
 
 @dataclass(frozen=True)
@@ -38,6 +40,8 @@ class Manifest:
     reference: Topology
     candidate: Topology
     validation_state: str
+    input_sha256: str | None = None
+    input_size_bytes: int | None = None
 
 
 _REQUIRED_FIELDS = (
@@ -65,6 +69,21 @@ def _mapping(value: Any, field: str) -> Mapping[str, Any]:
     if not isinstance(value, dict):
         raise ManifestError(f"{field} must be a JSON object")
     return value
+
+
+def _reject_unknown_fields(data: Mapping[str, Any], allowed: set[str], field: str) -> None:
+    unknown = sorted(set(data) - allowed)
+    if unknown:
+        raise ManifestError(f"{field} contains unsupported fields: {', '.join(unknown)}")
+
+
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    data: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in data:
+            raise ManifestError(f"duplicate JSON key: {key}")
+        data[key] = value
+    return data
 
 
 def _nonempty_string(value: Any, field: str) -> str:
@@ -96,6 +115,7 @@ def _identifier(raw: Any, field: str) -> int:
 
 def _parse_tolerances(value: Any) -> ToleranceConfig:
     data = _mapping(value, "tolerances")
+    _reject_unknown_fields(data, {"absolute", "relative", "policy"}, "tolerances")
     for field in ("absolute", "relative"):
         if field not in data:
             raise ManifestError(f"tolerances.{field} is required")
@@ -103,11 +123,15 @@ def _parse_tolerances(value: Any) -> ToleranceConfig:
     relative = _finite_number(data["relative"], "tolerances.relative")
     if absolute < 0.0 or relative < 0.0:
         raise ManifestError("tolerances must be non-negative")
-    return ToleranceConfig(absolute=absolute, relative=relative)
+    policy = data.get("policy", "symmetric_max")
+    if policy != "symmetric_max":
+        raise ManifestError("tolerances.policy must be symmetric_max")
+    return ToleranceConfig(absolute=absolute, relative=relative, policy=policy)
 
 
 def _parse_topology(value: Any, field: str) -> Topology:
     data = _mapping(value, field)
+    _reject_unknown_fields(data, {"nodes", "elements", "numerical_values"}, field)
     nodes_raw = _mapping(data.get("nodes"), f"{field}.nodes")
     elements_raw = _mapping(data.get("elements"), f"{field}.elements")
     numbers_raw = _mapping(data.get("numerical_values", {}), f"{field}.numerical_values")
@@ -126,11 +150,15 @@ def _parse_topology(value: Any, field: str) -> Topology:
     for raw_id, raw_element in elements_raw.items():
         element_id = _identifier(raw_id, f"{field} element ID")
         element_data = _mapping(raw_element, f"{field} element {element_id}")
+        _reject_unknown_fields(element_data, {"connectivity"}, f"{field} element {element_id}")
         connectivity = element_data.get("connectivity")
         if not isinstance(connectivity, list) or not connectivity:
             raise ManifestError(f"{field} element {element_id} connectivity must be a non-empty array")
         if any(isinstance(node, bool) or not isinstance(node, int) for node in connectivity):
             raise ManifestError(f"{field} element {element_id} connectivity must contain integer node IDs")
+        undeclared = sorted(set(connectivity) - set(nodes))
+        if undeclared:
+            raise ManifestError(f"{field} element {element_id} references undeclared nodes: {undeclared}")
         elements[element_id] = tuple(connectivity)
 
     numerical_values: dict[str, float] = {}
@@ -149,14 +177,21 @@ def load_manifest(path: str | Path) -> Manifest:
     """Load and strictly validate a JSON comparison manifest."""
 
     manifest_path = Path(path)
+    input_bytes = manifest_path.read_bytes()
     try:
-        raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+        raw = json.loads(input_bytes.decode("utf-8"), object_pairs_hook=_unique_object)
+    except UnicodeDecodeError as error:
+        raise ManifestError("manifest must be UTF-8 JSON") from error
     except json.JSONDecodeError as error:
         raise ManifestError(f"invalid JSON: {error.msg}") from error
     data = _mapping(raw, "manifest")
+    _reject_unknown_fields(data, set(_REQUIRED_FIELDS), "manifest")
     for field in _REQUIRED_FIELDS:
         if field not in data:
             raise ManifestError(f"{field} is required")
+
+    if data["schema_version"] != "1.0":
+        raise ManifestError("schema_version must be 1.0")
 
     units_data = _mapping(data["units"], "units")
     units = {
@@ -177,4 +212,6 @@ def load_manifest(path: str | Path) -> Manifest:
         reference=_parse_topology(data["reference"], "reference"),
         candidate=_parse_topology(data["candidate"], "candidate"),
         validation_state=state,
+        input_sha256=hashlib.sha256(input_bytes).hexdigest(),
+        input_size_bytes=len(input_bytes),
     )

@@ -10,3 +10,8 @@
 - Automated agents and normal validation code cannot assign `APPROVED`.
 - Keep the human-only approval API separate from automated validation and require reviewer identity plus an approval note.
 - Do not claim direct solver execution or response equivalence until those capabilities exist and are tested.
+- Preserve the designated baseline; classify inherited modeling concerns separately from translation defects.
+- Regression observations are not calibration targets. Document a threshold's source, units, formula and scope.
+- Keep automated failures and differences visible independently of human engineering recommendations.
+- Do not attribute residuals to floating point, sampling or response mapping without evidence for that cause.
+- Maintain known-field input validation and export input identity plus lifecycle history when changing reports.

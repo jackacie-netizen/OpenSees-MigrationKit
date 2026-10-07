@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opensees-migrationkit"
-version = "0.1.0"
-description = "Research-grade toolkit for migrating and validating OpenSees Tcl models against OpenSeesPy."
+version = "0.1.1"
+description = "Deterministic manifest validation for structural model topology and numerical data."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "BSD-3-Clause" }

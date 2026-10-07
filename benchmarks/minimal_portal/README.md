@@ -2,7 +2,7 @@
 
 This synthetic benchmark was created from scratch for OpenSees-MigrationKit. It represents a one-bay, one-storey elastic frame with four nodes and three elements.
 
-The Tcl and Python files are transparent reference artifacts showing the same intended topology. Version 0.1.0 does not execute them. Instead, the manifest declares reference and candidate data explicitly and the CLI compares those declarations:
+The Tcl and Python files are transparent reference artifacts showing the same intended topology. Version 0.1.1 does not execute them. Instead, the manifest declares reference and candidate data explicitly and the CLI compares those declarations:
 
 ```console
 opensees-migrationkit validate benchmarks/minimal_portal/manifest.json \
